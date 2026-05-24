@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AI Test Case Generation Agent API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: projects
+    description: Project management
+  - name: sources
+    description: Source document management
+  - name: generate
+    description: Test generation
+  - name: testsuites
+    description: Generated test suites
+  - name: requirements
+    description: Extracted requirements
+  - name: coverage
+    description: Coverage analytics
+  - name: chat
+    description: Conversational refinement
+  - name: stats
+    description: Dashboard statistics
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +39,668 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List all projects
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a new project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a project by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /sources:
+    get:
+      operationId: listSources
+      tags: [sources]
+      summary: List source documents
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Source"
+    post:
+      operationId: createSource
+      tags: [sources]
+      summary: Create a source document
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceInput"
+      responses:
+        "201":
+          description: Created source
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Source"
+
+  /sources/{id}:
+    get:
+      operationId: getSource
+      tags: [sources]
+      summary: Get a source by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Source
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Source"
+    delete:
+      operationId: deleteSource
+      tags: [sources]
+      summary: Delete a source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /generate:
+    post:
+      operationId: triggerGeneration
+      tags: [generate]
+      summary: Trigger test generation from sources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerationRequest"
+      responses:
+        "202":
+          description: Generation job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerationJob"
+
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [generate]
+      summary: List generation jobs
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GenerationJob"
+
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [generate]
+      summary: Get job status by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerationJob"
+
+  /test-suites:
+    get:
+      operationId: listTestSuites
+      tags: [testsuites]
+      summary: List all generated test suites
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+        - name: framework
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of test suites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestSuite"
+
+  /test-suites/{id}:
+    get:
+      operationId: getTestSuite
+      tags: [testsuites]
+      summary: Get test suite with test cases
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Test suite with cases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestSuiteDetail"
+
+  /requirements:
+    get:
+      operationId: listRequirements
+      tags: [requirements]
+      summary: List extracted requirements
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of requirements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Requirement"
+
+  /coverage:
+    get:
+      operationId: getCoverage
+      tags: [coverage]
+      summary: Get coverage metrics for a project
+      parameters:
+        - name: projectId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Coverage metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoverageReport"
+
+  /stats:
+    get:
+      operationId: getDashboardStats
+      tags: [stats]
+      summary: Get dashboard summary statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [stats]
+      summary: Get recent generation activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /framework-breakdown:
+    get:
+      operationId: getFrameworkBreakdown
+      tags: [stats]
+      summary: Get test suite counts grouped by framework
+      responses:
+        "200":
+          description: Framework breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FrameworkCount"
+
+  /chat/messages:
+    get:
+      operationId: listChatMessages
+      tags: [chat]
+      summary: List chat messages for a session
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a chat message and get AI response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "200":
+          description: AI response message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Project:
+      type: object
+      required: [id, name, description, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        coverageThreshold:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    ProjectInput:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        coverageThreshold:
+          type: ["integer", "null"]
+
+    Source:
+      type: object
+      required: [id, projectId, name, sourceType, status, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        name:
+          type: string
+        sourceType:
+          type: string
+          description: "prd | openapi | frontend_flow | unit_source"
+        content:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: "pending | processing | ready | error"
+        createdAt:
+          type: string
+
+    SourceInput:
+      type: object
+      required: [projectId, name, sourceType, content]
+      properties:
+        projectId:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+        sourceType:
+          type: string
+        content:
+          type: string
+
+    GenerationRequest:
+      type: object
+      required: [projectId, framework, testTypes]
+      properties:
+        projectId:
+          type: integer
+        sourceIds:
+          type: array
+          items:
+            type: integer
+        framework:
+          type: string
+          description: "jest | pytest | playwright | cypress | postman | junit"
+        testTypes:
+          type: array
+          items:
+            type: string
+          description: "unit | integration | e2e | edge_cases"
+        includeEdgeCases:
+          type: boolean
+
+    GenerationJob:
+      type: object
+      required: [id, projectId, status, framework, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        status:
+          type: string
+          description: "queued | running | completed | failed"
+        framework:
+          type: string
+        testTypes:
+          type: array
+          items:
+            type: string
+        progress:
+          type: ["integer", "null"]
+        errorMessage:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        completedAt:
+          type: ["string", "null"]
+
+    TestSuite:
+      type: object
+      required: [id, projectId, name, framework, testCount, coverageScore, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        jobId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        framework:
+          type: string
+        testCount:
+          type: integer
+        coverageScore:
+          type: number
+        createdAt:
+          type: string
+
+    TestCase:
+      type: object
+      required: [id, testSuiteId, title, testType, category]
+      properties:
+        id:
+          type: integer
+        testSuiteId:
+          type: integer
+        requirementId:
+          type: ["integer", "null"]
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        testType:
+          type: string
+          description: "happy_path | negative | boundary | auth | concurrent | security"
+        category:
+          type: string
+        code:
+          type: ["string", "null"]
+
+    TestSuiteDetail:
+      type: object
+      required: [id, projectId, name, framework, testCount, coverageScore, createdAt, testCases]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        jobId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        framework:
+          type: string
+        testCount:
+          type: integer
+        coverageScore:
+          type: number
+        createdAt:
+          type: string
+        testCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+
+    Requirement:
+      type: object
+      required: [id, projectId, sourceId, reqId, title, status]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        sourceId:
+          type: integer
+        reqId:
+          type: string
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: "covered | partial | uncovered"
+        testCaseCount:
+          type: integer
+
+    CoverageReport:
+      type: object
+      required: [projectId, endpointCoverage, requirementCoverage, edgeCaseCoverage, totalTests, coveredRequirements, uncoveredRequirements]
+      properties:
+        projectId:
+          type: integer
+        endpointCoverage:
+          type: number
+        requirementCoverage:
+          type: number
+        edgeCaseCoverage:
+          type: number
+        totalTests:
+          type: integer
+        coveredRequirements:
+          type: integer
+        uncoveredRequirements:
+          type: integer
+
+    DashboardStats:
+      type: object
+      required: [totalProjects, totalTestSuites, totalTests, avgCoverage, activeJobs, timeSavedHours]
+      properties:
+        totalProjects:
+          type: integer
+        totalTestSuites:
+          type: integer
+        totalTests:
+          type: integer
+        avgCoverage:
+          type: number
+        activeJobs:
+          type: integer
+        timeSavedHours:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, projectName, description, timestamp]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          description: "generation_complete | source_uploaded | job_started | coverage_alert"
+        projectName:
+          type: string
+        description:
+          type: string
+        framework:
+          type: ["string", "null"]
+        testCount:
+          type: ["integer", "null"]
+        timestamp:
+          type: string
+
+    FrameworkCount:
+      type: object
+      required: [framework, count, percentage]
+      properties:
+        framework:
+          type: string
+        count:
+          type: integer
+        percentage:
+          type: number
+
+    ChatMessage:
+      type: object
+      required: [id, sessionId, role, content, createdAt]
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: string
+        role:
+          type: string
+          description: "user | assistant"
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    ChatMessageInput:
+      type: object
+      required: [sessionId, content]
+      properties:
+        sessionId:
+          type: string
+        content:
+          type: string
+        projectId:
+          type: ["integer", "null"]
+        testSuiteId:
+          type: ["integer", "null"]
