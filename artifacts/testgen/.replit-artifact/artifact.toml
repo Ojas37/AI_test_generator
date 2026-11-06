@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AI Test Case Generation Agent"
+version = "1.0.0"
+id = "artifacts/testgen"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26201
+
+[services.development]
+run = "pnpm --filter @workspace/testgen run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/testgen", "run", "build" ]
+publicDir = "artifacts/testgen/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26201"
+BASE_PATH = "/"
